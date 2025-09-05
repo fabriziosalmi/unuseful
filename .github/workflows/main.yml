@@ -34,7 +34,7 @@ jobs:
       - name: Execute Scout Phase
         id: scout
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
           python scripts/scout.py > fragment.json
           
