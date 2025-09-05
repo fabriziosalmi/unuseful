@@ -25,8 +25,24 @@
 
     <main>
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Cerca frammenti..." aria-label="Cerca frammenti">
+            <div class="toolbar">
+                <input type="text" id="searchInput" placeholder="Cerca frammenti..." aria-label="Cerca frammenti">
+                <div class="toolbar-controls">
+                    <div class="control-group">
+                        <select id="sortBy" aria-label="Ordina per">
+                            <option value="date-desc">Data (più recenti)</option>
+                            <option value="date-asc">Data (più vecchi)</option>
+                            <option value="id-desc">ID (decrescente)</option>
+                            <option value="id-asc">ID (crescente)</option>
+                            <option value="size-desc">Dimensione (maggiore)</option>
+                            <option value="size-asc">Dimensione (minore)</option>
+                        </select>
+                    </div>
+                    <div class="stats">Frammenti: <span id="fragmentCount">0</span></div>
+                </div>
+            </div>
             <div class="filters">
+                <div id="tagChips" class="chips" aria-label="Filtra per tag"></div>
                 <select id="typeFilter" aria-label="Filtra per tipo">
                     <option value="">Tutti i tipi</option>
                     <option value="python">Python</option>
@@ -57,6 +73,7 @@
         <p>Unuseful - Un archivio di pattern cognitivi digitali</p>
     </footer>
 
+    <script src="js/data.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
