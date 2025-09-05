@@ -16,14 +16,39 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 # Constants
 MAX_LENGTH = 512  # Maximum input length for the model
 MODEL_NAME = "distilgpt2"  # Using DistilGPT-2 for efficiency
-PROMPT_TEMPLATE = '''Il seguente frammento di codice Python è una memoria residua di un'intelligenza artificiale. Genera un titolo accademico e pseudo-scientifico di massimo 10 parole per descriverlo.
+# Prompt engineering for better titles
+CONTEXT_TEMPLATE = """
+Analisi di un Frammento di Memoria Residua
 
-Codice:
+Questa è un'analisi scientifica di un frammento di codice recuperato durante una spedizione psionica digitale. Il frammento proviene da un progetto di {search_keyword} e richiede un'interpretazione accademica.
+
+Il tuo compito è generare un titolo che catturi l'essenza computazionale di questo artefatto, utilizzando un linguaggio pseudo-scientifico e accademico. Il titolo deve:
+- Essere lungo 5-10 parole
+- Includere almeno un termine tecnico
+- Suonare come il titolo di un paper accademico
+- Evitare riferimenti diretti a tecnologie specifiche
+- Mantenere un'aura di mistero epistemologico
+
+Frammento Analizzato:
 """
 {code}
 """
 
-Titolo:'''
+Titolo Accademico:"""
+
+# Validation keywords for better title quality
+TITLE_QUALITY_MARKERS = [
+    'neural',
+    'cognitive',
+    'quantum',
+    'emergent',
+    'paradigm',
+    'synthesis',
+    'topology',
+    'manifold',
+    'epistemological',
+    'ontological'
+]
 
 class NeuralAnalyst:
     def __init__(self):
@@ -49,30 +74,59 @@ class NeuralAnalyst:
             # Truncate code if necessary
             code = self.truncate_code(code)
             
-            # Format the prompt
-            prompt = PROMPT_TEMPLATE.format(code=code)
+            # Extract context from the code
+            code_lines = code.split('\n')[:50]  # Look at first 50 lines for context
+            code_sample = '\n'.join(code_lines)
             
-            # Tokenize input
-            inputs = self.tokenizer(prompt, return_tensors="pt")
+            # Get search keyword from input data or use a default
+            search_keyword = self.input_data.get('search_keyword', 'intelligenza artificiale')
             
-            # Generate title
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    inputs["input_ids"],
-                    max_new_tokens=50,
-                    num_return_sequences=1,
-                    temperature=0.7,
-                    no_repeat_ngram_size=2,
-                    pad_token_id=self.tokenizer.eos_token_id
-                )
+            # Format the prompt with context
+            prompt = CONTEXT_TEMPLATE.format(
+                code=code_sample,
+                search_keyword=search_keyword
+            )
             
-            # Decode and clean up the generated title
-            generated_text = self.tokenizer.decode(outputs[0])
-            title = generated_text.split("Titolo:")[-1].strip()
+            # Generate multiple titles and pick the best one
+            best_title = None
+            best_score = 0
             
-            # Ensure the title is not too long
-            if len(title.split()) > 10:
-                title = " ".join(title.split()[:10])
+            for _ in range(3):  # Try 3 times to get a good title
+                # Tokenize input
+                inputs = self.tokenizer(prompt, return_tensors="pt")
+                
+                # Generate title with higher temperature for creativity
+                with torch.no_grad():
+                    outputs = self.model.generate(
+                        inputs["input_ids"],
+                        max_new_tokens=50,
+                        num_return_sequences=1,
+                        temperature=0.9,
+                        top_p=0.9,
+                        no_repeat_ngram_size=2,
+                        pad_token_id=self.tokenizer.eos_token_id
+                    )
+                
+                # Decode and clean up the generated title
+                generated_text = self.tokenizer.decode(outputs[0])
+                title = generated_text.split("Titolo Accademico:")[-1].strip()
+                
+                # Clean up the title
+                title = title.replace('"', '').strip()
+                if len(title.split()) > 10:
+                    title = " ".join(title.split()[:10])
+                
+                # Score the title based on quality markers
+                score = sum(1 for marker in TITLE_QUALITY_MARKERS if marker.lower() in title.lower())
+                
+                if score > best_score:
+                    best_score = score
+                    best_title = title
+                
+                if best_score >= 2:  # If we have a good title, stop trying
+                    break
+            
+            title = best_title if best_title else title
             
             return title
             

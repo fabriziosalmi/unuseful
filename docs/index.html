@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unuseful - Archivio Digitale</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-jupyter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Unuseful</div>
+            <div class="nav-items">
+                <button id="toggleView">🎨 Vista</button>
+                <button id="toggleTheme">🌓 Tema</button>
+                <a href="https://github.com/fabriziosalmi/unuseful" target="_blank">GitHub</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Cerca frammenti..." aria-label="Cerca frammenti">
+            <div class="filters">
+                <select id="typeFilter" aria-label="Filtra per tipo">
+                    <option value="">Tutti i tipi</option>
+                    <option value="python">Python</option>
+                    <option value="jupyter">Jupyter</option>
+                </select>
+                <select id="patternFilter" aria-label="Filtra per pattern">
+                    <option value="">Tutti i pattern</option>
+                    <option value="struttura">Struttura oggettuale</option>
+                    <option value="funzione">Funzione computazionale</option>
+                    <option value="tensore">Tensore neurale</option>
+                    <option value="modello">Modello cognitivo</option>
+                    <option value="apprendimento">Apprendimento automatico</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="visualization-container">
+            <canvas id="patternChart"></canvas>
+            <div id="timeline"></div>
+        </div>
+
+        <div class="fragments-grid" id="fragmentsContainer">
+            <!-- I frammenti verranno inseriti qui dinamicamente -->
+        </div>
+    </main>
+
+    <footer>
+        <p>Unuseful - Un archivio di pattern cognitivi digitali</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

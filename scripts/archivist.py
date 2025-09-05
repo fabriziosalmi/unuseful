@@ -22,10 +22,19 @@ class MemoryArchivist:
         self.repo = git.Repo(self.repo_path)
         
         # Ensure the memories directories exist
-        self.python_dir = self.repo_path / 'memorie' / 'python'
-        self.jupyter_dir = self.repo_path / 'memorie' / 'jupyter'
-        self.python_dir.mkdir(parents=True, exist_ok=True)
-        self.jupyter_dir.mkdir(parents=True, exist_ok=True)
+        self.memories_dir = self.repo_path / 'memorie'
+        self.python_dir = self.memories_dir / 'python'
+        self.jupyter_dir = self.memories_dir / 'jupyter'
+        self.metadata_dir = self.memories_dir / '_metadata'
+        
+        # Create all required directories
+        for directory in [self.python_dir, self.jupyter_dir, self.metadata_dir]:
+            directory.mkdir(parents=True, exist_ok=True)
+            
+        # Initialize metadata index if it doesn't exist
+        self.metadata_index = self.metadata_dir / 'index.json'
+        if not self.metadata_index.exists():
+            self.metadata_index.write_text('{"fragments": []}')
 
     def get_next_id(self) -> int:
         """Get the next available fragment ID."""
@@ -38,17 +47,56 @@ class MemoryArchivist:
         ids = [int(f.stem.split('_')[1]) for f in existing_files]
         return max(ids) + 1
 
+    def update_metadata_index(self, fragment_id: int, data: Dict[str, Any], file_path: str) -> None:
+        """Update the metadata index with information about the new fragment."""
+        try:
+            current_metadata = json.loads(self.metadata_index.read_text())
+            
+            fragment_info = {
+                'id': fragment_id,
+                'title': data['generated_title'],
+                'timestamp': data['timestamp'],
+                'source': {
+                    'repo': data['repo_url'],
+                    'path': data['file_path'],
+                    'keyword': data.get('search_keyword', 'unknown')
+                },
+                'archived_path': str(file_path),
+                'file_type': file_path.suffix[1:],
+                'size': len(data['file_content'].encode('utf-8'))
+            }
+            
+            current_metadata['fragments'].append(fragment_info)
+            current_metadata['fragments'].sort(key=lambda x: x['id'])
+            
+            self.metadata_index.write_text(json.dumps(current_metadata, indent=2))
+            
+        except Exception as e:
+            print(f"Warning: Failed to update metadata index: {e}", file=sys.stderr)
+    
     def format_commit_message(self, data: Dict[str, Any], fragment_id: int) -> str:
         """Format the commit message according to the template."""
+        # Get cognitive markers from the code
+        code_markers = []
+        code_lower = data['file_content'].lower()
+        if 'class' in code_lower: code_markers.append('struttura oggettuale')
+        if 'def' in code_lower: code_markers.append('funzione computazionale')
+        if 'import torch' in code_lower: code_markers.append('tensore neurale')
+        if 'model' in code_lower: code_markers.append('modello cognitivo')
+        if 'train' in code_lower: code_markers.append('apprendimento automatico')
+        
+        markers = ', '.join(code_markers[:3]) if code_markers else 'natura indeterminata'
+        
         template = f"""Frammento #{fragment_id}: {data['generated_title']}
 
 - ID Frammento: {fragment_id}
 - Data Acquisizione: {data['timestamp']}
 - Sorgente Genetica: {data['repo_url']}
 - Percorso Originale: {data['file_path']}
+- Pattern Cognitivi: {markers}
 
 - Analisi Cognitiva Preliminare:
-Questo frammento rappresenta un'eco digitale catturata durante una spedizione di routine. La sua funzione e le sue implicazioni cognitive richiedono ulteriori studi da parte dei curatori del progetto."""
+Questo frammento rappresenta un'eco digitale catturata durante una spedizione di routine attraverso il substrato computazionale. Il suo pattern suggerisce {markers}, ma le sue reali implicazioni cognitive richiedono ulteriori studi da parte dei curatori del progetto."""
         
         return template
 
@@ -66,12 +114,31 @@ Questo frammento rappresenta un'eco digitale catturata durante una spedizione di
                 target_dir = self.python_dir
                 ext = '.py'
             
+            # Create the fragment file with a header comment
+            header = f""""""                                                            
+# Frammento {fragment_id:04d}
+# Titolo: {data['generated_title']}
+# Origine: {data['repo_url']}
+# Data: {data['timestamp']}
+"""
+
+"""
+
+{data['file_content']}"""
+            
             # Create the fragment file
             fragment_path = target_dir / f'frammento_{fragment_id:04d}{ext}'
-            fragment_path.write_text(data['file_content'])
+            fragment_path.write_text(header)
             
-            # Stage the file
-            self.repo.index.add([str(fragment_path.relative_to(self.repo_path))])
+            # Update metadata index
+            self.update_metadata_index(fragment_id, data, fragment_path)
+            
+            # Stage both the fragment and metadata files
+            relative_paths = [
+                str(fragment_path.relative_to(self.repo_path)),
+                str(self.metadata_index.relative_to(self.repo_path))
+            ]
+            self.repo.index.add(relative_paths)
             
             # Create the commit
             commit_message = self.format_commit_message(data, fragment_id)
