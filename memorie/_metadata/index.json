@@ -1,0 +1,18 @@
+{
+  "fragments": [
+    {
+      "id": 1,
+      "title": "Pattern cognitivo iniziale",
+      "timestamp": "2024-03-20T10:00:00Z",
+      "source": {
+        "repo": "https://github.com/fabriziosalmi/unuseful",
+        "path": "scripts/archivist.py",
+        "keyword": "pattern"
+      },
+      "archived_path": "memorie/python/frammento_0001.py",
+      "file_type": "python",
+      "patterns": "struttura oggettuale,funzione computazionale",
+      "size": 1024
+    }
+  ]
+}

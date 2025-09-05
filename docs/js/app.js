@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load fragments from metadata
     async function loadFragments() {
         try {
-            const response = await fetch('/memorie/_metadata/index.json');
+            const response = await fetch('memorie/_metadata/index.json');
             const data = await response.json();
             
             if (!data.fragments || !data.fragments.length) {
